@@ -16,6 +16,7 @@ hotels = [
 def get_hotels(
         id: int | None = Query(None, description="Айдишник"),
         title: str | None = Query(None, description="Название отеля"),
+        name: str | None = Query(None, description="Название отеля")
 ):
 
     hotels_ = []
@@ -38,12 +39,14 @@ def delete_hotel(hotel_id: int):
 
 @app.post("/hotels")
 def create_hotel(
-        title: str = Body(embed=True)
+        title: str = Body(embed=True),
+        name: str = Body(embed=True)
 ):
     global hotels
     hotels.append({
         "id": hotels[-1]["id"] + 1,
-        "title": title
+        "title": title,
+        "name": name
     })
     return {"status": "ok"}
 
