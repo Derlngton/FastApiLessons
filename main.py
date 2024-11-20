@@ -51,8 +51,12 @@ def create_hotel(
     return {"status": "ok"}
 
 
-@app.put("/hotels/{hotel_id}")
-def put_hotel(hotel_id: int, title: str, name: str):
+@app.put("/hotels/{hotel_id}", summary="Полное обновление данных об отеле")
+def put_hotel(hotel_id: int,
+              title: str = Body(),
+              name: str = Body()
+):
+
     global hotels
 
     hotels[hotel_id - 1]["title"] = title
@@ -61,11 +65,12 @@ def put_hotel(hotel_id: int, title: str, name: str):
     return {"status": "ok"}
 
 
-@app.patch("/hotels/{hotel_id}")
+@app.patch("/hotels/{hotel_id}", summary="Частичное обновление данных об отеле",
+           description="Частичное обновление данных об отеле, в отличии от ручки PUT, тут можно отправлять по одному параметру")
 def patch_hotel(
         hotel_id: int,
-        title: str | None = Query(None),
-        name: str | None = Query(None)
+        title: str | None = Body(None),
+        name: str | None = Body(None)
 ):
 
     global hotels
