@@ -27,7 +27,7 @@ router_hotels = APIRouter(prefix="/hotels", tags=["Hotels"])
 @router_hotels.get("")
 def get_hotels(
         pagination: PaginationDep,
-        id: int | None = Query(None, description="Айдишник"),
+        id: int | None = Query(None, description="Айдишникк"),
         title: str | None = Query(None, description="Название отеля"),
         name: str | None = Query(None, description="Название отеля"),
         # page:int | None = Query(1, description="Выбранная страница", gt=0),
