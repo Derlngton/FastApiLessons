@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.api.hotels import router_hotels
-from src.api.database import *
+from src.database import *
 
 # from src.config import settings
 
