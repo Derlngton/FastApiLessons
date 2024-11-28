@@ -2,10 +2,12 @@ from typing import Annotated
 
 from fastapi import Query, APIRouter, Body
 
+from sqlalchemy import insert
+
 from src.api.dependencies import PaginationDep
+from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotel, HotelPATCH
-
-
+from src.database import async_session_maker, engine
 
 hotels = [
     {"id": 1, "title": "Sochi","name": "sochi"},
@@ -62,25 +64,37 @@ def delete_hotel(hotel_id: int):
 
 
 @router_hotels.post("")
-def create_hotel(hotel_data: Hotel = Body(
+async def create_hotel(hotel_data: Hotel = Body(
     openapi_examples={
     "1":{"summary": "Сочи", "value": {
         "title" : "Отель Сочи 5 звезд",
-        "name" : "sochi_5_zvezd"
+        "location" : "Сочи, улица Отелей 5"
     }},
     "2":{"summary": "Дубай", "value": {
         "title" : "Отель Дубай плаза",
-        "name" : "dubai_plaza"
+        "location" : "Дубай, улица Арабская 8"
     }}
     })
 ):
-    global hotels
-    hotels.append({
-        "id": hotels[-1]["id"] + 1,
-        "title": hotel_data.title,
-        "name": hotel_data.name
-    })
-    return {"status": "ok"}
+
+    async with async_session_maker() as session:
+
+        # model_dump - преобразует модель в словарь
+        add_hotel_stmt = insert(HotelsOrm).values(hotel_data.model_dump())
+
+
+        # для более коректного дебага какого-то конкретного запроса (вместо echo=True):
+        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds" : True}))
+
+        # в уроке полученный словарь еще распаковывают ** в словарь
+        # зачем? если мы уже получаем словарь
+        # add_hotel_stat = insert(HotelsOrm).values(**hotel_data.model_dump())
+        await session.execute(add_hotel_stmt)
+
+        await session.commit()
+
+
+        return {"status": "ok"}
 
 
 
