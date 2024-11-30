@@ -1,16 +1,9 @@
-from typing import Annotated
-
 from fastapi import Query, APIRouter, Body
 
-from sqlalchemy import insert, select
-
 from src.api.dependencies import PaginationDep
-from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotel, HotelPATCH
-from src.database import async_session_maker, engine
+from src.database import async_session_maker
 from src.repositories.hotels import HotelsRepository
-
-
 
 router_hotels = APIRouter(prefix="/hotels", tags=["Hotels"])
 
@@ -33,16 +26,20 @@ async def get_hotels(
 
 
 
+@router_hotels.get("/{hotel_id}")
+async def get_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        return await HotelsRepository(session).get_one_or_none(id=hotel_id)
+
+
 
 
 @router_hotels.delete("/{hotel_id}")
 async def delete_hotel(hotel_id: int):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).delete(id=hotel_id)
+        await HotelsRepository(session).delete(id=hotel_id)
         await session.commit()
-
-
-    return {"status": "ok", "data": hotel}
+    return {"status": "ok"}
 
 
 
@@ -75,7 +72,7 @@ async def create_hotel(hotel_data: Hotel = Body(
 @router_hotels.put("/{hotel_id}", summary="Полное обновление данных об отеле")
 async def put_hotel(hotel_id: int, hotel_data: Hotel):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).full_update(id=hotel_id,data=hotel_data)
+        hotel = await HotelsRepository(session).update(hotel_data, id=hotel_id)
         await session.commit()
 
     return {"status": "ok", "data": hotel}
@@ -86,12 +83,8 @@ async def put_hotel(hotel_id: int, hotel_data: Hotel):
            description="Частичное обновление данных об отеле, в отличии от ручки PUT, тут можно отправлять по одному параметру")
 async def patch_hotel( hotel_id: int, hotel_data: HotelPATCH):
 
-    global hotels
+    async with async_session_maker() as session:
+        hotel = await HotelsRepository(session).update(hotel_data, is_patch=True, id=hotel_id)
+        await session.commit()
 
-    if hotel_data.title != None:
-        hotels[hotel_id - 1]["title"] = hotel_data.title
-    elif hotel_data.name != None:
-        hotels[hotel_id - 1]["name"] = hotel_data.name
-
-
-    return {"status": "ok"}
+    return {"status": "ok", "data": hotel}

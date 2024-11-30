@@ -26,8 +26,6 @@ class BaseRepository:
         return result.scalars().all()
 
 
-
-
     async def get_one_or_none(self,**filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
@@ -49,17 +47,24 @@ class BaseRepository:
         return result.scalars().one()
 
 
-    async def full_update(self, id:int, data:BaseModel, **filter_by) -> None:
+    async def update(self, data:BaseModel, is_patch: bool = False, **filter_by) -> None:
+        update_stmt = (
+            update(self.model)
+            .filter_by(**filter_by)
+            .values(data.model_dump(exclude_unset=is_patch))
+            .returning(self.model)
+        )
 
-        full_update_stmt = update(self.model).where(self.model.id == id).values(data.model_dump()).returning(self.model)
-        print(full_update_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
-        result = await self.session.execute(full_update_stmt)
+        # вынести отдельно, сделать декоратор для дебага запросов
+        print(update_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
+
+        result = await self.session.execute(update_stmt)
         return result.scalars().one()
 
 
-    async def delete(self,id:int, **filter_by) -> None:
+    async def delete(self, **filter_by) -> None:
 
-        delete_stmt = delete(self.model).where(self.model.id == id).returning(self.model)
+        # delete_stmt = delete(self.model).where(self.model.id == id)
+        delete_stmt = delete(self.model).filter_by(**filter_by)
         print(delete_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
-        result = await self.session.execute(delete_stmt)
-        return result.scalars().one()
+        await self.session.execute(delete_stmt)

@@ -1,11 +1,10 @@
-from sqlalchemy import select, insert
+from sqlalchemy import select
 
 
 
 from src.database import engine
 from src.models.hotels import HotelsOrm
 from src.repositories.base import BaseRepository
-from src.schemas.hotels import Hotel
 
 
 
