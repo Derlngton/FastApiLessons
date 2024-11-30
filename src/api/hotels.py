@@ -36,10 +36,13 @@ async def get_hotels(
 
 
 @router_hotels.delete("/{hotel_id}")
-def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
-    return {"status": "ok"}
+async def delete_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        hotel = await HotelsRepository(session).delete(id=hotel_id)
+        await session.commit()
+
+
+    return {"status": "ok", "data": hotel}
 
 
 
@@ -58,10 +61,10 @@ async def create_hotel(hotel_data: Hotel = Body(
     }}
     })
 ):
-
     async with async_session_maker() as session:
-        await HotelsRepository(session).add(data=hotel_data)
-        hotel = await HotelsRepository(session).get_one_or_none(**hotel_data.model_dump())
+        # await HotelsRepository(session).add(data=hotel_data)
+        hotel = await HotelsRepository(session).add(data=hotel_data)
+        # hotel = await HotelsRepository(session).get_one_or_none(**hotel_data.model_dump())
         await session.commit()
 
     return {"status": "ok", "data": hotel}
@@ -70,20 +73,18 @@ async def create_hotel(hotel_data: Hotel = Body(
 
 
 @router_hotels.put("/{hotel_id}", summary="Полное обновление данных об отеле")
-def put_hotel(hotel_id: int, hotel_data: Hotel):
+async def put_hotel(hotel_id: int, hotel_data: Hotel):
+    async with async_session_maker() as session:
+        hotel = await HotelsRepository(session).full_update(id=hotel_id,data=hotel_data)
+        await session.commit()
 
-    global hotels
-
-    hotels[hotel_id - 1]["title"] = hotel_data.title
-    hotels[hotel_id - 1]["name"] = hotel_data.name
-
-    return {"status": "ok"}
+    return {"status": "ok", "data": hotel}
 
 
 
 @router_hotels.patch("/{hotel_id}", summary="Частичное обновление данных об отеле",
            description="Частичное обновление данных об отеле, в отличии от ручки PUT, тут можно отправлять по одному параметру")
-def patch_hotel( hotel_id: int, hotel_data: HotelPATCH):
+async def patch_hotel( hotel_id: int, hotel_data: HotelPATCH):
 
     global hotels
 

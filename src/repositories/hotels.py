@@ -41,17 +41,3 @@ class HotelsRepository(BaseRepository):
 
         return result.scalars().all()
 
-    # async def add(self, hotel_data: Hotel):
-    #
-    #
-    #     # model_dump - преобразует модель в словарь
-    #     add_hotel_stmt = insert(HotelsOrm).values(hotel_data.model_dump())
-    #
-    #
-    #     # для более коректного дебага какого-то конкретного запроса (вместо echo=True):
-    #     print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds" : True}))
-    #
-    #     # в уроке полученный словарь еще распаковывают ** в словарь
-    #     # зачем? если мы уже получаем словарь
-    #     # add_hotel_stat = insert(HotelsOrm).values(**hotel_data.model_dump())
-    #     await self.session.execute(add_hotel_stmt)
