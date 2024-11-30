@@ -8,7 +8,7 @@ from src.api.dependencies import PaginationDep
 from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotel, HotelPATCH
 from src.database import async_session_maker, engine
-
+from src.repositories.hotels import HotelsRepository
 
 
 
@@ -16,51 +16,22 @@ router_hotels = APIRouter(prefix="/hotels", tags=["Hotels"])
 
 
 
-
 @router_hotels.get("")
 async def get_hotels(
         pagination: PaginationDep,
-        # hotel_data: HotelGET
-        # id: int | None = Query(None, description="Айдишникк"),
         title: str | None = Query(None, description="Название отеля"),
         location: str | None = Query(None, description="Расположение отеля")
 ):
     per_page = pagination.per_page or 5
-
-
     async with async_session_maker() as session:
-
-        query = select(HotelsOrm)
-
-        if title:
-            query=query.filter(HotelsOrm.title.icontains(title))
-        if location:
-            query=query.filter(HotelsOrm.location.icontains(location))
-
-        query=(
-            query
-            .limit(per_page)
-            .offset(per_page * (pagination.page - 1))
+        return await HotelsRepository(session).get_all(
+            location=location,
+            title=title,
+            limit=per_page,
+            offset=per_page * (pagination.page - 1)
         )
 
-        print(query.compile(engine, compile_kwargs={"literal_binds": True}))
 
-        result = await session.execute(query)
-
-        # print(type(result), result)
-
-        # hotels = result.all()
-        # возвращает список кортежей из одного элемента (в кортеже объект HotelsOrm)
-
-        hotels = result.scalars().all()
-        # возвращает так же список, но из каждого кортежа берет по первому элементу
-        # т.е получаем список объектов HotelsOrm
-
-        # другие варианты получения резалт
-        # first_hotel = result.first()
-        # result.one_or_none()
-
-        return hotels
 
 
 
@@ -89,23 +60,11 @@ async def create_hotel(hotel_data: Hotel = Body(
 ):
 
     async with async_session_maker() as session:
-
-        # model_dump - преобразует модель в словарь
-        add_hotel_stmt = insert(HotelsOrm).values(hotel_data.model_dump())
-
-
-        # для более коректного дебага какого-то конкретного запроса (вместо echo=True):
-        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds" : True}))
-
-        # в уроке полученный словарь еще распаковывают ** в словарь
-        # зачем? если мы уже получаем словарь
-        # add_hotel_stat = insert(HotelsOrm).values(**hotel_data.model_dump())
-        await session.execute(add_hotel_stmt)
-
+        await HotelsRepository(session).add(data=hotel_data)
+        hotel = await HotelsRepository(session).get_one_or_none(**hotel_data.model_dump())
         await session.commit()
 
-
-        return {"status": "ok"}
+    return {"status": "ok", "data": hotel}
 
 
 
