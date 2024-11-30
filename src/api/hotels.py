@@ -2,22 +2,13 @@ from typing import Annotated
 
 from fastapi import Query, APIRouter, Body
 
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 
 from src.api.dependencies import PaginationDep
 from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotel, HotelPATCH
 from src.database import async_session_maker, engine
 
-hotels = [
-    {"id": 1, "title": "Sochi","name": "sochi"},
-    {"id": 2, "title": "Dubai","name": "dubai"},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
-]
 
 
 
@@ -27,29 +18,49 @@ router_hotels = APIRouter(prefix="/hotels", tags=["Hotels"])
 
 
 @router_hotels.get("")
-def get_hotels(
+async def get_hotels(
         pagination: PaginationDep,
-        id: int | None = Query(None, description="Айдишникк"),
+        # hotel_data: HotelGET
+        # id: int | None = Query(None, description="Айдишникк"),
         title: str | None = Query(None, description="Название отеля"),
-        name: str | None = Query(None, description="Название отеля"),
-        # page:int | None = Query(1, description="Выбранная страница", gt=0),
-        # per_page: int| None = Query(3, description="Кол-во отелей на странице", gt=0, lt=20)
+        location: str | None = Query(None, description="Расположение отеля")
 ):
-
-    hotels_ = []
-    for hotel in hotels:
-        if id and hotel["id"] != id:
-            continue
-        if title and hotel["title"] != title:
-            continue
-        if name and hotel["name"] != name:
-            continue
-        hotels_.append(hotel)
+    per_page = pagination.per_page or 5
 
 
-    first_hotel= pagination.per_page * (pagination.page - 1)
+    async with async_session_maker() as session:
 
-    return hotels_[first_hotel: first_hotel + pagination.per_page]
+        query = select(HotelsOrm)
+
+        if title:
+            query=query.filter(HotelsOrm.title.icontains(title))
+        if location:
+            query=query.filter(HotelsOrm.location.icontains(location))
+
+        query=(
+            query
+            .limit(per_page)
+            .offset(per_page * (pagination.page - 1))
+        )
+
+        print(query.compile(engine, compile_kwargs={"literal_binds": True}))
+
+        result = await session.execute(query)
+
+        # print(type(result), result)
+
+        # hotels = result.all()
+        # возвращает список кортежей из одного элемента (в кортеже объект HotelsOrm)
+
+        hotels = result.scalars().all()
+        # возвращает так же список, но из каждого кортежа берет по первому элементу
+        # т.е получаем список объектов HotelsOrm
+
+        # другие варианты получения резалт
+        # first_hotel = result.first()
+        # result.one_or_none()
+
+        return hotels
 
 
 
