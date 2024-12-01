@@ -11,7 +11,7 @@ class Hotel(HotelAdd):
 
     # # параметр from_attributes=True всегда в этой схеме
     # # нужно для метода валидации model_validate, чтобы не указывать его каждый раз
-    # model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HotelPATCH(BaseModel):
