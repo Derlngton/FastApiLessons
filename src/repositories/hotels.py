@@ -5,11 +5,12 @@ from sqlalchemy import select
 from src.database import engine
 from src.models.hotels import HotelsOrm
 from src.repositories.base import BaseRepository
-
+from src.schemas.hotels import Hotel
 
 
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
+    schema = Hotel
 
 
     async def get_all(
@@ -18,7 +19,7 @@ class HotelsRepository(BaseRepository):
             title:str,
             limit:int,
             offset:int
-    ):
+    ) -> list[Hotel]:
 
 
         query = select(HotelsOrm)
@@ -38,5 +39,6 @@ class HotelsRepository(BaseRepository):
 
         result = await self.session.execute(query)
 
-        return result.scalars().all()
+        return [Hotel.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+
 

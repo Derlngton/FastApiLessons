@@ -2,10 +2,12 @@ from sqlalchemy import select, insert, update, delete
 from pydantic import BaseModel
 
 from src.database import engine
+from src.schemas.hotels import Hotel
 
 
 class BaseRepository:
     model = None
+    schema: BaseModel = None
 
 
     def __init__(self, session):
@@ -17,19 +19,27 @@ class BaseRepository:
         query = select(self.model)
         result = await self.session.execute(query)
 
+
         # hotels = result.all()
         # возвращает список кортежей из одного элемента (в кортеже объект HotelsOrm)
         # hotels = result.scalars().all()
         # возвращает так же список, но из каждого кортежа берет по первому элементу
         # т.е получаем список объектов HotelsOrm
-
-        return result.scalars().all()
+        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
 
 
     async def get_one_or_none(self,**filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        return result.scalars().one_or_none()
+
+        model = result.scalars().one_or_none()
+
+        if model is None:
+            return None
+
+        return self.schema.model_validate(model, from_attributes=True)
+
+        # return result.scalars().one_or_none()
 
 
 
@@ -44,10 +54,12 @@ class BaseRepository:
         # зачем? если мы уже получаем словарь
         # add_hotel_stat = insert(HotelsOrm).values(**hotel_data.model_dump())
         result = await self.session.execute(add_hotel_stmt)
-        return result.scalars().one()
+        # return result.scalars().one()
+        model = result.scalars().one()
+        return self.schema.model_validate(model, from_attributes=True)
 
 
-    async def update(self, data:BaseModel, is_patch: bool = False, **filter_by) -> None:
+    async def update(self, data:BaseModel, is_patch: bool = False, **filter_by):
         update_stmt = (
             update(self.model)
             .filter_by(**filter_by)
@@ -59,7 +71,11 @@ class BaseRepository:
         print(update_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
 
         result = await self.session.execute(update_stmt)
-        return result.scalars().one()
+
+        # return result.scalars().one()
+        model = result.scalars().one()
+
+        return self.schema.model_validate(model, from_attributes=True)
 
 
     async def delete(self, **filter_by) -> None:

@@ -1,9 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
-class Hotel(BaseModel):
+class HotelAdd(BaseModel):
     title: str
     location: str
+
+
+class Hotel(HotelAdd):
+    id:int
+
+    # # параметр from_attributes=True всегда в этой схеме
+    # # нужно для метода валидации model_validate, чтобы не указывать его каждый раз
+    # model_config = ConfigDict(from_attributes=True)
 
 
 class HotelPATCH(BaseModel):
