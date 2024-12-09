@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, Query
+from fastapi import Depends, Query, HTTPException, Request
 from pydantic import BaseModel
 
+from src.services.auth import AuthService
 
 
 class PaginationParams(BaseModel):
@@ -13,17 +14,19 @@ class PaginationParams(BaseModel):
 
 PaginationDep = Annotated[PaginationParams, Depends()]
 
-# можно реализовать иначе, без использования депендс
-# вот пример из доки
-# class FilterParams(BaseModel):
-#     model_config = {"extra": "forbid"}
-#
-#     limit: int = Field(100, gt=0, le=100)
-#     offset: int = Field(0, ge=0)
-#     order_by: Literal["created_at", "updated_at"] = "created_at"
-#     tags: list[str] = []
-#
-#
-# @app.get("/items/")
-# async def read_items(filter_query: Annotated[FilterParams, Query()]):
-#     return filter_query
+
+
+def get_token(request: Request):
+
+    token = request.cookies.get('access_token', None)
+    if not token:
+        raise HTTPException(status_code=401, detail="Не получен токен")
+    return token
+
+def get_current_user_id(token: str = Depends(get_token)) -> int:
+    data=AuthService().decode_token(token)
+    return data["user_id"]
+
+
+
+UserIdDep = Annotated[int, Depends(get_current_user_id)]
