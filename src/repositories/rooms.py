@@ -11,7 +11,7 @@ class RoomsRepository(BaseRepository):
     schema = Room
 
 
-    async def get_all(
+    async def get_filtered(
             self,
             hotel_id: int,
             title:str,

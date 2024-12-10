@@ -13,19 +13,22 @@ class BaseRepository:
         # на случай, если будет использоваться несколько методов класса подряд, чтобы все были в рамках одной сессии
         self.session = session
 
-
-    async def get_all(self,*args, **kwargs):
-        query = select(self.model)
+    async def get_filtered(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-
 
         # hotels = result.all()
         # возвращает список кортежей из одного элемента (в кортеже объект HotelsOrm)
         # hotels = result.scalars().all()
         # возвращает так же список, но из каждого кортежа берет по первому элементу
         # т.е получаем список объектов HotelsOrm
+
         return [self.schema.model_validate(model) for model in result.scalars().all()]
         # return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+
+    async def get_all(self,*args, **kwargs):
+        return await self.get_filtered()
+
 
     async def get_one_or_none(self,**filter_by):
         query = select(self.model).filter_by(**filter_by)

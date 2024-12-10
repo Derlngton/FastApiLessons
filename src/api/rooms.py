@@ -3,33 +3,32 @@ from fastapi import Query, APIRouter, Body
 
 from src.database import async_session_maker
 from src.repositories.rooms import RoomsRepository
-from src.schemas.rooms import Room, RoomAdd, RoomPATCH, RoomPut
+from src.schemas.rooms import Room, RoomAdd, RoomPatch, RoomAddRequest, RoomPatchRequest
 
 router_rooms = APIRouter(prefix="/hotels", tags=["Rooms"])
 
 
 
-@router_rooms.post("/rooms", summary="Добавление номера")
-async def create_room(room_data: RoomAdd = Body(
+@router_rooms.post("/{hotel_id}/rooms", summary="Добавление номера")
+async def create_room(hotel_id: int, room_data: RoomAddRequest = Body(
     openapi_examples={
     "1":{"summary": "Лакшери", "value": {
         "title" : "Лакшерус",
         "description" : "Ого, вот это номер",
         "price" : 1000000,
-        "quantity" : 5,
-        "hotel_id" : 2
+        "quantity" : 5
     }},
     "2":{"summary": "Одиночный", "value": {
         "title" : "Одноместный",
         "description" : "Для бедолаг",
         "price" : 1000,
-        "quantity" : 5,
-        "hotel_id" : 6
+        "quantity" : 5
     }},
     })
 ):
+    _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     async with async_session_maker() as session:
-        room = await RoomsRepository(session).add(data=room_data)
+        room = await RoomsRepository(session).add(data=_room_data)
         await session.commit()
 
     return {"status": "ok", "data": room}
@@ -45,12 +44,18 @@ async def get_rooms(
         max_price: int | None = Query(None, description="Максимальная цена")
 ):
     async with async_session_maker() as session:
-        return await RoomsRepository(session).get_all(
+        return await RoomsRepository(session).get_filtered(
             hotel_id = hotel_id,
             title=title,
             min_price=min_price,
             max_price=max_price
         )
+        # return await RoomsRepository(session).get_all(
+        #     hotel_id = hotel_id,
+        #     title=title,
+        #     min_price=min_price,
+        #     max_price=max_price
+        # )
 
 
 
@@ -73,7 +78,8 @@ async def delete_room(hotel_id: int, room_id: int):
 
 #
 @router_rooms.put("/{hotel_id}/rooms/{room_id}", summary="Полное обновление данных о номере")
-async def put_hotel(hotel_id: int, room_id:int, room_data: RoomPut):
+async def put_hotel(hotel_id: int, room_id:int, room_data: RoomAddRequest):
+    _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     async with async_session_maker() as session:
         room = await RoomsRepository(session).update(room_data, id=room_id, hotel_id= hotel_id)
         await session.commit()
@@ -85,10 +91,10 @@ async def put_hotel(hotel_id: int, room_id:int, room_data: RoomPut):
 
 @router_rooms.patch("/{hotel_id}/rooms/{room_id}", summary="Частичное обновление данных о номере",
            description="В отличии от ручки PUT, тут можно отправлять по одному параметру")
-async def patch_hotel(hotel_id: int, room_id:int, room_data: RoomPATCH):
-
+async def patch_hotel(hotel_id: int, room_id: int, room_data: RoomPatchRequest):
+    _room_data = RoomPatch(hotel_id=hotel_id, **room_data.model_dump(exclude_unset=True))
     async with async_session_maker() as session:
-        room = await RoomsRepository(session).update(room_data, is_patch=True, id=room_id, hotel_id= hotel_id)
+        room = await RoomsRepository(session).update(_room_data, is_patch=True, id=room_id, hotel_id=hotel_id)
         await session.commit()
 
     return {"status": "ok", "data": room}
