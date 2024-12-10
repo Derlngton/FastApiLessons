@@ -23,8 +23,3 @@ class HotelPATCH(BaseModel):
 #     id: int
 #     title: str | None = Field(None)
 #     location: str | None = Field(None)
-
-# class HotelGET(BaseModel):
-#     title: str | None = Field(None, description="Название отеля"),
-#     location: str | None = Field(None, description="Расположение отеля")
-

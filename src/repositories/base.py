@@ -2,7 +2,6 @@ from sqlalchemy import select, insert, update, delete
 from pydantic import BaseModel
 
 from src.database import engine
-from src.schemas.hotels import Hotel
 
 
 class BaseRepository:
@@ -45,15 +44,15 @@ class BaseRepository:
 
     async def add(self, data: BaseModel):
         # model_dump - преобразует модель в словарь
-        add_hotel_stmt = insert(self.model).values(data.model_dump()).returning(self.model)
+        stmt = insert(self.model).values(data.model_dump()).returning(self.model)
 
         # для более коректного дебага (вместо echo=True):
-        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
+        print(stmt.compile(engine, compile_kwargs={"literal_binds": True}))
 
         # в уроке полученный словарь еще распаковывают ** в словарь
         # зачем? если мы уже получаем словарь
         # add_hotel_stat = insert(HotelsOrm).values(**hotel_data.model_dump())
-        result = await self.session.execute(add_hotel_stmt)
+        result = await self.session.execute(stmt)
         # return result.scalars().one()
         model = result.scalars().one()
         # return self.schema.model_validate(model, from_attributes=True)
