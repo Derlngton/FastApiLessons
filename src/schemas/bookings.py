@@ -9,13 +9,14 @@ from pydantic import BaseModel, Field, ConfigDict
 class BookingAddRequest(BaseModel):
     date_from: date
     date_to: date
-    user_id: int
+    room_id: int
+
 
 
 
 class BookingAdd(BookingAddRequest):
-    room_id: int
     price:int
+    user_id: int
 
 
 class Booking(BookingAdd):

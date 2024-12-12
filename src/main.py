@@ -10,7 +10,7 @@ from src.api.hotels import router_hotels
 from src.api.auth import router_auth
 from src.api.rooms import router_rooms
 from src.api.bookings import router_bookings
-from src.database import *
+# from src.database import *
 
 
 app = FastAPI()
