@@ -9,12 +9,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 from src.api.hotels import router_hotels
 from src.api.auth import router_auth
 from src.api.rooms import router_rooms
+from src.api.bookings import router_bookings
 from src.database import *
 
-# from src.config import settings
-
-
-# print(f'{settings.DB_NAME=}')
 
 app = FastAPI()
 
@@ -22,6 +19,7 @@ app = FastAPI()
 app.include_router(router_auth)
 app.include_router(router_hotels)
 app.include_router(router_rooms)
+app.include_router(router_bookings)
 
 
 
