@@ -10,6 +10,7 @@ from src.api.hotels import router_hotels
 from src.api.auth import router_auth
 from src.api.rooms import router_rooms
 from src.api.bookings import router_bookings
+from src.api.facilities import router_facilities
 # from src.database import *
 
 
@@ -20,6 +21,7 @@ app.include_router(router_auth)
 app.include_router(router_hotels)
 app.include_router(router_rooms)
 app.include_router(router_bookings)
+app.include_router(router_facilities)
 
 
 
