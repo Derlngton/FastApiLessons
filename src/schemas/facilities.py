@@ -1,10 +1,10 @@
 from pydantic import BaseModel, Field, ConfigDict
 
-class FacilitieAdd(BaseModel):
+class FacilityAdd(BaseModel):
     title: str
 
 
-class Facilitie(FacilitieAdd):
+class Facility(FacilityAdd):
     id:int
 
     model_config = ConfigDict(from_attributes=True)
