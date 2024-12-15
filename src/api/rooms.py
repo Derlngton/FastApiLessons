@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import Query, APIRouter, Body
 
 from src.api.dependencies import DBDep
@@ -34,20 +36,30 @@ async def create_room(db: DBDep, hotel_id: int, room_data: RoomAddRequest = Body
 
 
 
+# @router_rooms.get("/{hotel_id}/rooms", summary="Получение номеров в отеле")
+# async def get_rooms(
+#         db: DBDep,
+#         hotel_id: int,
+#         title: str | None = Query(None, description="Название номера"),
+#         min_price: int | None = Query(None, description="Минимальная цена"),
+#         max_price: int | None = Query(None, description="Максимальная цена")
+# ):
+#     return await db.rooms.get_filtered(
+#         hotel_id = hotel_id,
+#         title=title,
+#         min_price=min_price,
+#         max_price=max_price
+#         )
+
+
 @router_rooms.get("/{hotel_id}/rooms", summary="Получение номеров в отеле")
 async def get_rooms(
         db: DBDep,
         hotel_id: int,
-        title: str | None = Query(None, description="Название номера"),
-        min_price: int | None = Query(None, description="Минимальная цена"),
-        max_price: int | None = Query(None, description="Максимальная цена")
+        date_from: date = Query(example="2025-01-08"),
+        date_to: date = Query(example="2025-01-01")
 ):
-    return await db.rooms.get_filtered(
-        hotel_id = hotel_id,
-        title=title,
-        min_price=min_price,
-        max_price=max_price
-        )
+    return await db.rooms.get_filtered_by_time(hotel_id=hotel_id,date_from=date_from, date_to=date_to)
 
 
 

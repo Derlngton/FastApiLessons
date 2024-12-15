@@ -13,8 +13,11 @@ class BaseRepository:
         # на случай, если будет использоваться несколько методов класса подряд, чтобы все были в рамках одной сессии
         self.session = session
 
-    async def get_filtered(self, **filter_by):
-        query = select(self.model).filter_by(**filter_by)
+    async def get_filtered(self, *filter, **filter_by):
+        query = (
+            select(self.model)
+            .filter(*filter)
+            .filter_by(**filter_by))
         result = await self.session.execute(query)
 
         # hotels = result.all()

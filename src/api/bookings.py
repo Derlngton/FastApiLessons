@@ -8,6 +8,24 @@ router_bookings = APIRouter(prefix="/bookings", tags=["Bookings"])
 
 
 
+@router_bookings.get("", summary="Получение всех броней на сервисе. Админская ручка")
+async def get_bookings(pagination: PaginationDep, db: DBDep):
+    per_page = pagination.per_page or 5
+    return await db.bookings.get_filtered(
+        limit=per_page,
+        offset=per_page * (pagination.page - 1)
+    )
+
+
+@router_bookings.get("/me", summary="Получение всех броней пользователя")
+async def get_hotel(pagination: PaginationDep,db: DBDep, user_id: UserIdDep):
+    per_page = pagination.per_page or 5
+    return await db.bookings.get_filtered(
+        limit=per_page,
+        offset=per_page * (pagination.page - 1),
+        user_id=user_id
+    )
+
 
 @router_bookings.post("")
 async def create_booking(
@@ -39,20 +57,4 @@ async def create_booking(
     return {"status": "ok", "data": booking}
 
 
-@router_bookings.get("", summary="Получение всех броней на сервисе. Админская ручка")
-async def get_bookings(pagination: PaginationDep, db: DBDep):
-    per_page = pagination.per_page or 5
-    return await db.bookings.get_filtered(
-        limit=per_page,
-        offset=per_page * (pagination.page - 1)
-    )
 
-
-@router_bookings.get("/me", summary="Получение всех броней пользователя")
-async def get_hotel(pagination: PaginationDep,db: DBDep, user_id: UserIdDep):
-    per_page = pagination.per_page or 5
-    return await db.bookings.get_filtered(
-        limit=per_page,
-        offset=per_page * (pagination.page - 1),
-        user_id=user_id
-    )
