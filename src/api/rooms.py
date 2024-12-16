@@ -3,6 +3,7 @@ from datetime import date
 from fastapi import Query, APIRouter, Body
 
 from src.api.dependencies import DBDep
+from src.schemas.facilities import RoomFacilityAdd
 from src.schemas.rooms import Room, RoomAdd, RoomPatch, RoomAddRequest, RoomPatchRequest
 
 router_rooms = APIRouter(prefix="/hotels", tags=["Rooms"])
@@ -16,19 +17,27 @@ async def create_room(db: DBDep, hotel_id: int, room_data: RoomAddRequest = Body
         "title" : "Лакшерус",
         "description" : "Ого, вот это номер",
         "price" : 1000000,
-        "quantity" : 5
+        "quantity" : 5,
+        "facilities_ids": [1, 2]
     }},
     "2":{"summary": "Одиночный", "value": {
         "title" : "Одноместный",
         "description" : "Для бедолаг",
         "price" : 1000,
-        "quantity" : 5
+        "quantity" : 5,
+        "facilities_ids": [2, 3]
     }},
     })
 ):
+    print(room_data.model_dump())
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-
+    print(_room_data.model_dump())
     room = await db.rooms.add(data=_room_data)
+
+    if room_data.facilities_ids is not None:
+        rooms_facilities_data = [RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids]
+
+        await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.commit()
 
     return {"status": "ok", "data": room}

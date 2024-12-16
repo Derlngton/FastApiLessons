@@ -50,10 +50,10 @@ class BaseRepository:
 
     async def add(self, data: BaseModel):
         # model_dump - преобразует модель в словарь
-        stmt = insert(self.model).values(data.model_dump()).returning(self.model)
+        stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
 
         # для более коректного дебага (вместо echo=True):
-        print(stmt.compile(engine, compile_kwargs={"literal_binds": True}))
+        # print(stmt.compile(engine, compile_kwargs={"literal_binds": True}))
 
         # в уроке полученный словарь еще распаковывают ** в словарь
         # зачем? если мы уже получаем словарь
@@ -63,6 +63,12 @@ class BaseRepository:
         model = result.scalars().one()
         # return self.schema.model_validate(model, from_attributes=True)
         return self.schema.model_validate(model)
+
+    async def add_bulk(self, data: list[BaseModel]):
+        stmt = insert(self.model).values([item.model_dump() for item in data])
+        # print(stmt.compile(engine, compile_kwargs={"literal_binds": True}))
+        await self.session.execute(stmt)
+
 
 
     async def update(self, data:BaseModel, is_patch: bool = False, **filter_by):
