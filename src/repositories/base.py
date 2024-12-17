@@ -65,6 +65,7 @@ class BaseRepository:
         return self.schema.model_validate(model)
 
     async def add_bulk(self, data: list[BaseModel]):
+        # батчевая ручка, добавляет сразу несколько строк в бд
         stmt = insert(self.model).values([item.model_dump() for item in data])
         # print(stmt.compile(engine, compile_kwargs={"literal_binds": True}))
         await self.session.execute(stmt)

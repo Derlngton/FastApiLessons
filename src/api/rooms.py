@@ -29,9 +29,9 @@ async def create_room(db: DBDep, hotel_id: int, room_data: RoomAddRequest = Body
     }},
     })
 ):
-    print(room_data.model_dump())
+    # print(room_data.model_dump())
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-    print(_room_data.model_dump())
+    # print(_room_data.model_dump())
     room = await db.rooms.add(data=_room_data)
 
     if room_data.facilities_ids is not None:
@@ -88,11 +88,13 @@ async def delete_room(db: DBDep, hotel_id: int, room_id: int):
 
 
 
-#
 @router_rooms.put("/{hotel_id}/rooms/{room_id}", summary="Полное обновление данных о номере")
-async def put_hotel(db: DBDep, hotel_id: int, room_id:int, room_data: RoomAddRequest):
+async def put_room(db: DBDep, hotel_id: int, room_id:int, room_data: RoomAddRequest):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-    room = await db.rooms.update(room_data, id=room_id, hotel_id= hotel_id)
+
+    room = await db.rooms.update(_room_data, id=room_id, hotel_id= hotel_id)
+
+    await db.rooms_facilities.set_room_facilities(room_id = room_id, facilities_ids=room_data.facilities_ids)
     await db.commit()
 
     return {"status": "ok", "data": room}
@@ -102,8 +104,15 @@ async def put_hotel(db: DBDep, hotel_id: int, room_id:int, room_data: RoomAddReq
 
 @router_rooms.patch("/{hotel_id}/rooms/{room_id}", summary="Частичное обновление данных о номере",
            description="В отличии от ручки PUT, тут можно отправлять по одному параметру")
-async def patch_hotel(db: DBDep, hotel_id: int, room_id: int, room_data: RoomPatchRequest):
-    _room_data = RoomPatch(hotel_id=hotel_id, **room_data.model_dump(exclude_unset=True))
+async def patch_room(db: DBDep, hotel_id: int, room_id: int, room_data: RoomPatchRequest):
+
+    _room_data_dict = room_data.model_dump(exclude_unset=True)
+    _room_data = RoomPatch(hotel_id=hotel_id, **_room_data_dict)
+
     room = await db.rooms.update(_room_data, is_patch=True, id=room_id, hotel_id=hotel_id)
+
+    if "facilities_ids" in _room_data_dict:
+        await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"])
+
     await db.commit()
     return {"status": "ok", "data": room}
