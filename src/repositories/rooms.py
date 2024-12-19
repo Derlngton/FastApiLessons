@@ -5,13 +5,15 @@ from sqlalchemy.orm import selectinload,joinedload
 
 from src.models.rooms import RoomsOrm
 from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import RoomDataMapper
 from src.repositories.utils import rooms_ids_for_booking
 from src.schemas.rooms import Room, RoomWithRels
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsOrm
-    schema = Room
+    # schema = Room
+    mapper = RoomDataMapper
 
 
     # async def get_filtered(

@@ -2,11 +2,13 @@ from sqlalchemy import select, insert, update, delete
 from pydantic import BaseModel
 
 from src.database import engine
+from src.repositories.mappers.base import DataMapper
 
 
 class BaseRepository:
     model = None
-    schema: BaseModel = None
+    # schema: BaseModel = None
+    mapper: DataMapper = None
 
 
     def __init__(self, session):
@@ -26,7 +28,7 @@ class BaseRepository:
         # возвращает так же список, но из каждого кортежа берет по первому элементу
         # т.е получаем список объектов HotelsOrm
 
-        return [self.schema.model_validate(model) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]
         # return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
 
     async def get_all(self,*args, **kwargs):
@@ -42,7 +44,7 @@ class BaseRepository:
         if model is None:
             return None
 
-        return self.schema.model_validate(model)
+        return self.mapper.map_to_domain_entity(model)
         # return result.scalars().one_or_none()
         # return self.schema.model_validate(model, from_attributes=True)
 
@@ -62,7 +64,7 @@ class BaseRepository:
         # return result.scalars().one()
         model = result.scalars().one()
         # return self.schema.model_validate(model, from_attributes=True)
-        return self.schema.model_validate(model)
+        return self.mapper.map_to_domain_entity(model)
 
     async def add_bulk(self, data: list[BaseModel]):
         # батчевая ручка, добавляет сразу несколько строк в бд
@@ -89,7 +91,7 @@ class BaseRepository:
         model = result.scalars().one()
 
         # return self.schema.model_validate(model, from_attributes=True)
-        return self.schema.model_validate(model)
+        return self.mapper.map_to_domain_entity(model)
 
 
     async def delete(self, **filter_by) -> None:

@@ -29,9 +29,8 @@ async def create_room(db: DBDep, hotel_id: int, room_data: RoomAddRequest = Body
     }},
     })
 ):
-    # print(room_data.model_dump())
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-    # print(_room_data.model_dump())
+
     room = await db.rooms.add(data=_room_data)
 
     if room_data.facilities_ids is not None:

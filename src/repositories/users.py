@@ -5,12 +5,14 @@ from fastapi import HTTPException
 
 from src.models.users import UsersOrm
 from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import UserDataMapper
 from src.schemas.users import User, UserWithHashPassword
 
 
 class UsersRepository(BaseRepository):
     model = UsersOrm
-    schema = User
+    # schema = User
+    mapper = UserDataMapper
 
 
     async def get_user_with_hash_password(self, email: EmailStr):
