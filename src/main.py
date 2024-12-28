@@ -21,6 +21,7 @@ from src.api.auth import router_auth
 from src.api.rooms import router_rooms
 from src.api.bookings import router_bookings
 from src.api.facilities import router_facilities
+from src.api.images import router_images
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -41,6 +42,7 @@ app.include_router(router_hotels)
 app.include_router(router_rooms)
 app.include_router(router_bookings)
 app.include_router(router_facilities)
+app.include_router(router_images)
 
 
 
