@@ -34,25 +34,20 @@ async def add_hotels_and_rooms(setup_database):
     with open("tests/mock_hotels.json") as file:
         hotels_data = json.load(file)
 
-        pydantic_hotels_data = [HotelAdd(**hotel) for hotel in hotels_data]
-        async with DBManager(session_factory=async_session_maker_null_pull) as db:
-
-            await db.hotels.add_bulk(data=pydantic_hotels_data)
-            await db.commit()
-
-
     with open("tests/mock_rooms.json") as file:
         rooms_data = json.load(file)
 
-        pydantic_rooms_data = [RoomAdd(**room) for room in rooms_data]
-        async with DBManager(session_factory=async_session_maker_null_pull) as db:
+    pydantic_hotels_data = [HotelAdd(**hotel) for hotel in hotels_data]
+    # pydantic_hotels_data = [HotelAdd.model_validate(hotel) for hotel in hotels_data]
 
-            await db.rooms.add_bulk(data=pydantic_rooms_data)
-            await db.commit()
+    pydantic_rooms_data = [RoomAdd(**room) for room in rooms_data]
+    # pydantic_rooms_data = [RoomAdd.model_validate(room) for room in rooms_data]
 
+    async with DBManager(session_factory=async_session_maker_null_pull) as db:
 
-
-
+        await db.hotels.add_bulk(data=pydantic_hotels_data)
+        await db.rooms.add_bulk(data=pydantic_rooms_data)
+        await db.commit()
 
 
 
