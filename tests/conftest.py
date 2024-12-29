@@ -1,11 +1,16 @@
+import json
+
 import pytest
 
 from httpx import AsyncClient, ASGITransport
 
 from src.config import settings
-from src.database import Base, engine_null_pull
+from src.database import Base, engine_null_pull, async_session_maker_null_pull
 from src.main import app
 from src.models import *
+from src.schemas.hotels import HotelAdd
+from src.schemas.rooms import RoomAdd
+from src.utils.db_manager import DBManager
 
 
 # scope="session" - чтобы фикстура выполнялась один раз за всю сессию. Если параметр не указывать, фикстура будет выполняться каждую функцию. дефолтное значение = function
@@ -22,8 +27,37 @@ async def setup_database(check_test_mode):
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+
 @pytest.fixture(scope="session", autouse=True)
-async def register_user(setup_database):
+async def add_hotels_and_rooms(setup_database):
+
+    with open("tests/mock_hotels.json") as file:
+        hotels_data = json.load(file)
+
+        pydantic_hotels_data = [HotelAdd(**hotel) for hotel in hotels_data]
+        async with DBManager(session_factory=async_session_maker_null_pull) as db:
+
+            await db.hotels.add_bulk(data=pydantic_hotels_data)
+            await db.commit()
+
+
+    with open("tests/mock_rooms.json") as file:
+        rooms_data = json.load(file)
+
+        pydantic_rooms_data = [RoomAdd(**room) for room in rooms_data]
+        async with DBManager(session_factory=async_session_maker_null_pull) as db:
+
+            await db.rooms.add_bulk(data=pydantic_rooms_data)
+            await db.commit()
+
+
+
+
+
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def register_user(add_hotels_and_rooms):
     async with AsyncClient(transport=ASGITransport(app=app), base_url= 'http://test') as ac:
         await ac.post(
             '/auth/register',
