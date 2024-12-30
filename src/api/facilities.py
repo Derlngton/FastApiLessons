@@ -12,7 +12,7 @@ router_facilities = APIRouter(prefix="/facilities", tags=["Facilities"])
 
 
 @router_facilities.get("")
-@cache(expire=10)
+# @cache(expire=10)
 async def get_all_facilities(db: DBDep):
     # оставил код для понимания всяких джсон дампов и т.п
     # facilities_from_cache = await redis_manager.get("facilities")
@@ -28,7 +28,6 @@ async def get_all_facilities(db: DBDep):
     # else:
     #     facilities_dicts = json.loads(facilities_from_cache)
     #     return facilities_dicts
-    print("Иду в БД")
     return await db.facilities.get_all()
 
 
