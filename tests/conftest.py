@@ -89,3 +89,19 @@ async def register_user(add_hotels_and_rooms, ac):
             "password": "124345"
         }
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def authenticated_ac(register_user, ac):
+    response = await ac.post(
+        "/auth/login",
+        json={
+            "email": "koskin@sup.ru",
+            "password": "124345"
+        }
+    )
+    # print(response.status_code)
+    # print(response.json())
+    assert response.status_code == 200
+    assert response.json()["access_token"]
+    yield ac
