@@ -31,10 +31,12 @@ async def test_booking_crud(db):
     )
 
 
-    update_booking = await db.bookings.update(new_booking_data)
+    update_booking = await db.bookings.update(new_booking_data, id = booking.id)
     assert update_booking
+    assert update_booking.id == booking.id
     assert update_booking.date_from == new_booking_data.date_from
     print(f"{update_booking=}")
+
 
 
     await db.bookings.delete(id = booking.id)

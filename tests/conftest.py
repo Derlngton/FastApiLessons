@@ -4,6 +4,7 @@ import pytest
 
 from httpx import AsyncClient, ASGITransport
 
+from src.api.dependencies import get_db
 from src.config import settings
 from src.database import Base, engine_null_pull, async_session_maker_null_pull
 from src.main import app
@@ -19,6 +20,25 @@ def check_test_mode():
     assert settings.MODE == "TEST"
 
 
+# новая зависимость.Нужна для тестов
+# но есть и другое решение этой проблемы
+# в database.py добавляется условие для тестовой среды
+async def get_db_null_pull():
+    async with DBManager(session_factory = async_session_maker_null_pull) as db:
+        yield db
+
+# перезаписываем зависимость для тестов
+# в тестах используется подключение с null_pull. Без перезаписи при тестировании api будет использоваться дефолтное подключние без нулл_пулл
+app.dependency_overrides[get_db] = get_db_null_pull
+
+
+@pytest.fixture(scope="function")
+async def db() -> DBManager:
+    # async with DBManager(session_factory=async_session_maker_null_pull) as db:
+    #     yield db
+    async for db in get_db_null_pull():
+        yield db
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database(check_test_mode):
@@ -27,11 +47,6 @@ async def setup_database(check_test_mode):
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-
-@pytest.fixture(scope="function")
-async def db() -> DBManager:
-    async with DBManager(session_factory=async_session_maker_null_pull) as db:
-        yield db
 
 
 @pytest.fixture(scope="session", autouse=True)

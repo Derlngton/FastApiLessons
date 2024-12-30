@@ -5,6 +5,15 @@ from sqlalchemy.orm import DeclarativeBase
 
 from src.config import settings
 
+
+# второй способ использования нулпулла для движка при тестировании и селери
+# db_params={}
+# if settings.MODE == "TEST":
+#     db_params = {"poolclass": NullPool}
+
+# engine = create_async_engine(settings.DB_URL, **db_params)
+
+
 # для быстрого дебага хватит (settings.DB_URL, echo = True)
 engine = create_async_engine(settings.DB_URL)
 async_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
