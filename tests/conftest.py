@@ -91,7 +91,7 @@ async def register_user(add_hotels_and_rooms, ac):
     )
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def authenticated_ac(register_user, ac):
     response = await ac.post(
         "/auth/login",
@@ -103,5 +103,6 @@ async def authenticated_ac(register_user, ac):
     # print(response.status_code)
     # print(response.json())
     assert response.status_code == 200
-    assert response.json()["access_token"]
+    # assert response.json()["access_token"]
+    assert ac.cookies["access_token"]
     yield ac
