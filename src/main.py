@@ -6,11 +6,13 @@ from fastapi import FastAPI, Query, Body
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
+# from fastapi_cache.backends.inmemory import InMemoryBackend
 
 
 import sys
 from pathlib import Path
 
+from src.config import settings
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -31,6 +33,11 @@ async def lifespan(app:FastAPI):
     yield
     # При выключении/перезагрузке проекта
     await redis_manager.close()
+
+# # вместо написания заглушке для кэша(редис) можно использовать класс InMemoryBackend
+# # но это не подходит для всех других сервисов. Во всех других случаях нужны моки
+# if settings.MODE == "TEST":
+#     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
 
 app = FastAPI(lifespan=lifespan)
