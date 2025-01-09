@@ -12,9 +12,10 @@ from fastapi_cache.backends.redis import RedisBackend
 import sys
 from pathlib import Path
 
-from src.config import settings
 
 sys.path.append(str(Path(__file__).parent.parent))
+
+from src.config import settings
 
 from src.setup import redis_manager
 
