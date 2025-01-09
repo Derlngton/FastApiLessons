@@ -33,7 +33,7 @@ class BookingsRepository(BaseRepository):
                 .offset(offset)
             )
 
-            print(query.compile(engine, compile_kwargs={"literal_binds": True}))
+            # print(query.compile(engine, compile_kwargs={"literal_binds": True}))
 
             result = await self.session.execute(query)
 
