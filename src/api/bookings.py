@@ -53,7 +53,7 @@ async def create_booking(
 
     # booking = await db.bookings.add(data=_booking_data)
 
-    booking = await db.bookings.add_booking(data=_booking_data, hotel_id=room.hotel_id, id = room.id)
+    booking = await db.bookings.add_booking(data=_booking_data, hotel_id=room.hotel_id, room_id = room.id)
     await db.commit()
 
     return {"status": "ok", "data": booking}

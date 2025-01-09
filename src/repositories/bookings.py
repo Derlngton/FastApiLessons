@@ -52,15 +52,15 @@ class BookingsRepository(BaseRepository):
 
 
 
-    async def add_booking(self, data: BookingAdd, hotel_id: int, **filter_by):
+    async def add_booking(self, data: BookingAdd, hotel_id: int, room_id:int, **filter_by):
 
         # проверка на наличие свободных комнат
         rooms_ids_to_get = rooms_ids_for_booking(date_from= data.date_from,date_to=data.date_to, hotel_id=hotel_id)
 
         query = (
             select(RoomsOrm)
+            # .filter_by(**filter_by)
             .filter(RoomsOrm.id.in_(rooms_ids_to_get))
-            .filter_by(**filter_by)
         )
 
         result = await self.session.execute(query)
@@ -68,9 +68,15 @@ class BookingsRepository(BaseRepository):
         rooms = [Room.model_validate(model) for model in result.unique().scalars().all()]
 
 
-        print(f"{rooms=}")
+        # print(f"{rooms=}")
 
-        if rooms==[]:
+        room_ids = [room.model_dump()["id"] for room in rooms]
+
+        # print(f"{room_ids=}")
+        # print(f"{room_id=}")
+
+        # if rooms==[]:
+        if room_id not in room_ids:
             raise HTTPException(status_code=404, detail="Не найдены свободные номера")
 
 
